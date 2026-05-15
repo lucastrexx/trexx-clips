@@ -1,0 +1,9 @@
+node_modules/
+**/node_modules/
+dist/
+target/
+*.sqlite
+*.db
+.env
+apps/api/data/
+.DS_Store

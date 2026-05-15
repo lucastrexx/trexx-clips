@@ -1,0 +1,13 @@
+{
+  "name": "trexx-stellar",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "build:web": "npm run build -w apps/web"
+  }
+}
