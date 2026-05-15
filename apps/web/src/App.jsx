@@ -26,6 +26,67 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
+/**
+ * Fetch to the API. Relative `/api` strings use API_BASE when set (production).
+ * @x402/fetch wraps calls as `new Request(input, init)`, which resolves relative URLs
+ * against the page origin — so we must rewrite same-origin `/api` Request URLs
+ * to API_BASE or x402 POSTs hit the static host (404) while loadJson still works.
+ */
+function apiFetch(input, init) {
+  if (typeof input === "string" && input.startsWith("/")) {
+    return fetch(`${API_BASE}${input}`, init);
+  }
+  if (
+    API_BASE &&
+    typeof globalThis.location !== "undefined" &&
+    input instanceof Request
+  ) {
+    let u;
+    try {
+      u = new URL(input.url);
+    } catch {
+      return fetch(input, init);
+    }
+    if (
+      u.pathname.startsWith("/api") &&
+      u.origin === globalThis.location.origin
+    ) {
+      const base = API_BASE.replace(/\/$/, "");
+      const path = `${u.pathname}${u.search}${u.hash}`;
+      const hasBody =
+        input.method !== "GET" && input.method !== "HEAD" && input.body != null;
+      return fetch(
+        new Request(`${base}${path}`, {
+          method: input.method,
+          headers: input.headers,
+          ...(hasBody ? { body: input.body, duplex: "half" } : {}),
+          redirect: input.redirect,
+          credentials: input.credentials,
+          mode: input.mode,
+          cache: input.cache,
+          signal: input.signal,
+        }),
+      );
+    }
+  }
+  return fetch(input, init);
+}
+
+/** Static hosting (e.g. Vercel) has no /api — production builds must set VITE_API_URL to the public API origin. */
+function ApiConfigBanner() {
+  if (!import.meta.env.PROD || API_BASE) return null;
+  return (
+    <div className="alert warn" role="status">
+      <strong>Backend URL missing.</strong> Set{" "}
+      <code className="mono">VITE_API_URL</code> in Vercel to your API HTTPS
+      origin (no trailing slash), e.g.{" "}
+      <code className="mono">https://your-app.onrender.com</code>, then
+      redeploy. Otherwise requests go to this site and{" "}
+      <code className="mono">/api/*</code> returns 404.
+    </div>
+  );
+}
+
 const TABS_SPONSOR = [
   { id: "campaign", label: "New campaign" },
   { id: "sponsor", label: "Approve & settle" },
@@ -84,7 +145,7 @@ function describeX402402Response(r, bodyText) {
 }
 
 async function loadJson(path, init) {
-  const r = await fetch(`${API_BASE}${path}`, init);
+  const r = await apiFetch(path, init);
   if (!r.ok) {
     const t = await r.text();
     throw new Error(`${r.status}: ${t}`);
@@ -191,13 +252,7 @@ export function App() {
       STELLAR_TESTNET_CAIP2,
       new ExactStellarScheme(signer),
     );
-    const rawFetch = (input, init) => {
-      if (typeof input === "string" && input.startsWith("/")) {
-        return fetch(`${API_BASE}${input}`, init);
-      }
-      return fetch(input, init);
-    };
-    return wrapFetchWithPayment(rawFetch, client);
+    return wrapFetchWithPayment(apiFetch, client);
   }, [addr]);
 
   const myCampaigns = useMemo(() => {
@@ -355,9 +410,7 @@ export function App() {
   async function createCampaignFull() {
     setErr(null);
     if (!addr) {
-      setErr(
-        "Connect Freighter as a sponsor before creating a campaign.",
-      );
+      setErr("Connect Freighter as a sponsor before creating a campaign.");
       return;
     }
     setIsWorking(true);
@@ -486,12 +539,11 @@ export function App() {
             <div>
               <h1 className="home-title">Trexx Clips</h1>
               <p className="home-sub">
-                Stellar Testnet · Soroban · x402 — connect your wallet and choose
-                how you want to use the app.
+                Stellar Testnet · Soroban · x402 — connect your wallet and
+                choose how you want to use the app.
               </p>
             </div>
           </header>
-
           {err && <div className="alert error">{err}</div>}
 
           {!addr && (
@@ -526,8 +578,8 @@ export function App() {
                   </span>
                   <strong>I'm a creator</strong>
                   <span>
-                    I submit clips to open campaigns and pay x402 to register
-                    my video.
+                    I submit clips to open campaigns and pay x402 to register my
+                    video.
                   </span>
                 </button>
                 <button
@@ -767,8 +819,7 @@ export function App() {
                     <option value="">— choose —</option>
                     {myCampaigns.map((c) => (
                       <option key={c.id} value={c.id}>
-                        #{c.id} — {c.title}{" "}
-                        {c.escrow_funded ? "✓" : "· draft"}
+                        #{c.id} — {c.title} {c.escrow_funded ? "✓" : "· draft"}
                       </option>
                     ))}
                   </select>
