@@ -56,28 +56,3 @@ npm install
 npm run dev:api    # terminal 1
 npm run dev:web    # terminal 2
 ```
-
-## x402
-
-**`POST /api/clips`** uses `@x402/express` + `ExactStellarScheme` (testnet). This repo uses `https://www.x402.org/facilitator` (Node fetch breaks on `https://x402.org` 308 redirects — see [HTTPFacilitatorClient](https://www.npmjs.com/package/@x402/core)). For dev without payment: `X402_DISABLED=true` on the API.
-
-Reference: [x402 on Stellar](https://developers.stellar.org/docs/build/agentic-payments/x402).
-
-## Hosted demo (hackathon)
-
-1. **API**: deploy on `Render`, `Fly.io`, `Railway`, etc. Set all variables from `apps/api/.env.example`; use HTTPS.
-2. **Web**: `npm run build -w apps/web` and serve `apps/web/dist` on Vercel/Netlify; replace `vite.config.js` `server.proxy` with **`VITE_API_URL`** in production.
-
-## Hackathon checklist (summary)
-
-| Deliverable | Where |
-|--------|------|
-| MVP testnet + Loom | Record the flow in the app + explorer |
-| ≥ 3 commits | Contract / API / Web+x402 |
-| x402 | Commit with `POST /api/clips` + `@x402/*` deps |
-| Deck slide “Business model” | 80/20 on-chain + value per 1k views |
-| Demo URL + video + posts | Outside the codebase |
-
-## Legacy XLM example
-
-[examples/stellar-testnet-example.mjs](examples/stellar-testnet-example.mjs)
