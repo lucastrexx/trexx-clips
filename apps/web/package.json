@@ -1,0 +1,24 @@
+{
+  "name": "@trexx/web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@stellar/freighter-api": "6.0.1",
+    "@stellar/stellar-sdk": "14.6.1",
+    "@x402/core": "2.8.0",
+    "@x402/fetch": "2.8.0",
+    "@x402/stellar": "2.8.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "4.3.4",
+    "vite": "6.0.3"
+  }
+}
