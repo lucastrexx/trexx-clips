@@ -26,6 +26,13 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
+/** When API_BASE is set, return absolute API URL so x402's internal `new Request(url)` keeps the Render (etc.) host instead of the Vercel origin. */
+function resolveApiPath(path) {
+  if (!path.startsWith("/")) return path;
+  const base = API_BASE.replace(/\/$/, "");
+  return base ? `${base}${path}` : path;
+}
+
 /**
  * Fetch to the API. Relative `/api` strings use API_BASE when set (production).
  * @x402/fetch wraps calls as `new Request(input, init)`, which resolves relative URLs
@@ -460,7 +467,7 @@ export function App() {
     }
     try {
       const campaignId = Number(clipForm.campaignId);
-      const r = await paidFetch("/api/clips", {
+      const r = await paidFetch(resolveApiPath("/api/clips"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
